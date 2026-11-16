@@ -106,6 +106,22 @@ nested.verdict(for: "logs/.gitignore").isIgnored     // false
 A path ending in `/` is a directory. `IgnoreLedger` (an actor) checks a conversation's answers in turn and
 marks a wrong claim that comes back after a correction as repeated.
 
+A claim that rests only on the sentence's own patterns ("`doc/*.txt` matches `doc/server/arch.txt`") is read
+only when something mentions an ignore file: the answer itself, the `context` you pass, or (in a ledger) any
+earlier answer or question. Without that, "`[a-z]+` matches `abc`" is a sentence about a regex, not a
+`.gitignore`, and makes no claim:
+
+```swift
+let checker = IgnoreClaimChecker()
+checker.check("`doc/*.txt` matches `doc/server/arch.txt`.").verdict                       // .noClaims
+checker.check("`doc/*.txt` matches `doc/server/arch.txt`.",
+              context: "How do I set up my .gitignore?").verdict                          // .wrong
+
+let ledger = IgnoreLedger()
+await ledger.review(firstAnswer, context: question)   // the question names .gitignore
+await ledger.review(secondAnswer)                      // read in that context too
+```
+
 ### Policies
 
 | Policy | Lines of a `.gitignore` as claims | `core.ignorecase` | Caveats |
@@ -130,7 +146,7 @@ marks a wrong claim that comes back after a correction as repeated.
 the `logs/*` rewrite), a comment after a pattern, where patterns match, a trailing slash and `**`
 between slashes, ignoring a file that is already committed, letter case under three policies, a nested
 `.gitignore` next to a `.dockerignore`, and a conversation through an `IgnoreLedger` where one wrong claim
-comes back. The full output is in [Screenshots/demo-output.txt](Screenshots/demo-output.txt); two runs
+comes back, followed by an unrelated answer about a regex that makes no claim. The full output is in [Screenshots/demo-output.txt](Screenshots/demo-output.txt); two runs
 are byte-identical.
 
 ## Quality
@@ -138,9 +154,10 @@ are byte-identical.
 ![tests](Screenshots/tests.svg)
 
 - `swift build`: 0 warnings, 0 errors (Swift 6.4.2, language mode 6).
-- `swift test --enable-code-coverage`: 48 tests in 9 suites, 0 failures.
-- `llvm-cov report` on the library: **100.00% of lines (1486) and functions (411)** in all 22 files;
-  regions 98.70% (1064/1078). [Screenshots/coverage.txt](Screenshots/coverage.txt) has the full report.
+- `swift test --enable-code-coverage`: 50 tests in 9 suites, 0 failures. Numbers here are for 1.0.1.
+- `llvm-cov report` on the library: **100.00% of lines (1518) and functions (424)** in all 22 files;
+  regions 98.64% to 98.82% across runs (1084 to 1086 of 1099; which few regions a run misses varies with
+  test scheduling). [Screenshots/coverage.txt](Screenshots/coverage.txt) has the report from the capture run.
 - `swiftlint lint --strict`: 0 violations in 26 files, with the series' `.swiftlint.yml` unchanged.
 - **Parity with git.** `Scripts/parity.py` builds a throwaway repository for each of 67 cases (one or
   more `.gitignore` files, real files and directories on disk), asks `git check-ignore --no-index` about
@@ -154,7 +171,10 @@ are byte-identical.
 - Probed before tagging with 39 correct answers (an Xcode `.gitignore` template with section comments,
   "won't stop tracking it", advice such as "use `/build` rather than `build`", a `.dockerignore`, a
   question, a block introduced as "this doesn't work") and 8 wrong ones. The correct answers raise
-  nothing and every wrong one is caught; both sets are kept as a test.
+  nothing and every wrong one is caught; both sets are kept as a test. 1.0.1 adds 15 sentences from other
+  domains ("`[a-z]+` matches `abc`", "`compactMap` ignores `nil` values", "`~1.2` matches `1.2.5`", "the route
+  `/users/*` matches `/users/42`"): 1.0.0 read most of them as `.gitignore` claims and judged them wrong; 1.0.1
+  leaves all fifteen alone, and they are kept as a test.
 
 ## Limits
 
@@ -168,8 +188,21 @@ are byte-identical.
 - A clause is read only up to "if", "unless", "when" or "otherwise", and advice ("should", "to ignore",
   "can") is not a claim: these keep answers quiet, at the cost of missing a claim phrased that way.
 - `.gitignore` claims made through `git check-ignore -v` or `git status` output are not read.
+- Without a mention of an ignore file in the answer or its context, a sentence's own patterns are not read:
+  "`doc/*.txt` matches `doc/server/arch.txt`" in an answer that never says `.gitignore`, with no context
+  passed, makes no claim.
 - `alreadyTracked` is judged from the sentence alone. An answer that mentions `git rm --cached` anywhere
   is taken to know the rule.
+
+## Changes
+
+- **1.0.1** - Claims that rest only on a sentence's own patterns need an ignore file in view (the answer, the
+  `context` argument, or an earlier turn in an `IgnoreLedger`). 1.0.0 read "`[a-z]+` matches `abc`" or
+  "`compactMap` ignores `nil` values" as `.gitignore` claims and called them wrong, which put a gitignore note
+  under correct answers about other things. New: `check(_:context:)`, `claims(in:context:)`,
+  `review(_:context:)`, `IgnoreClaimReader.isAboutIgnoreRules(_:)`, `IgnoreLedger.isAboutIgnoreRules`. A
+  `.dockerignore` (or similar) named only in the context makes the sentence's claims unchecked.
+- **1.0.0** - First release.
 
 ## Part of a series
 

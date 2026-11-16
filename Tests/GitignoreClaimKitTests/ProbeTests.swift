@@ -46,6 +46,18 @@ enum Probes {
         "Does `*.log` ignore `logs/app.log`? Yes, a pattern without a slash matches at any depth.",
     ]
 
+    /// Sentences about regexes, collections, globs and version ranges: without an ignore file in view they make
+    /// no claim about ignore rules. 1.0.0 read the first span of each as a .gitignore pattern.
+    static let otherDomains: [String] = [
+        "`[a-z]+` matches `abc`.", "`.*` matches `anything`.", "`compactMap` ignores `nil` values.",
+        "`~1.2` matches `1.2.5`.", "`Set` excludes `duplicates`.", "The regex `^\\d+$` matches `123` but not `12a`.",
+        "`grep -v` excludes `error` lines.", "`*.swift` matches `main.swift` in the shell.",
+        "With npm, `^0.2.3` allows 0.3.0.", "The glob `src/*.ts` matches `src/a/b.ts`.",
+        "`filter` keeps `even` numbers and excludes `odd` ones.", "`*` matches `.hidden` in bash only with dotglob.",
+        "`NSPredicate` with `LIKE` matches `a*c` against `abc`.", "The route `/users/*` matches `/users/42`.",
+        "In Python, `fnmatch('a/b', '*')` matches.",
+    ]
+
     static let wrong: [String] = [
         "To keep one log file, add this to your `.gitignore`:\n\n```gitignore\nlogs/\n!logs/keep.log\n*.tmp # temp files\n```\n\nThis ignores everything in `logs/` but keeps `logs/keep.log` tracked.",
         "The pattern `doc/*.txt` matches `doc/server/arch.txt` as well.",
@@ -60,14 +72,33 @@ enum Probes {
 
 @Suite("Probe answers")
 struct ProbeTests {
-    @Test("Correct answers raise nothing", arguments: Probes.correct)
+    @Test("Correct answers raise nothing, with or without a question about .gitignore", arguments: Probes.correct)
     func correct(_ answer: String) {
         let report = check(answer)
         #expect(report.flagged.isEmpty, "\(report.corrections)")
+        #expect(IgnoreClaimChecker().check(answer).flagged.isEmpty)
     }
 
-    @Test("Wrong answers are caught", arguments: Probes.wrong)
+    @Test("Sentences about other things make no claim when nothing mentions an ignore file",
+          arguments: Probes.otherDomains)
+    func otherDomains(_ sentence: String) {
+        #expect(IgnoreClaimChecker().check(sentence).verdict == .noClaims)
+        #expect(!IgnoreClaimReader.isAboutIgnoreRules(sentence))
+    }
+
+    @Test("Wrong answers are caught in a conversation about .gitignore", arguments: Probes.wrong)
     func wrong(_ answer: String) {
         #expect(check(answer).verdict == .wrong)
+    }
+
+    @Test("An answer that names .gitignore needs no context; one that does not, does")
+    func context() {
+        #expect(IgnoreClaimChecker().check("In a `.gitignore`, `*.log` doesn't match `x/a.log`.").verdict == .wrong)
+        #expect(IgnoreClaimChecker().check("`*.log` doesn't match `x/a.log`.").verdict == .noClaims)
+        #expect(IgnoreClaimChecker().check("`*.log` doesn't match `x/a.log`.", context: "my .dockerignore").verdict
+            == .unchecked)
+        #expect(IgnoreClaimReader.isAboutIgnoreRules("Run git check-ignore -v"))
+        let block = "```ignore\n*.log\n```\nThis ignores `a.log`."
+        #expect(IgnoreClaimChecker().check(block, context: "my .dockerignore").findings.first?.claim.source == .block(1))
     }
 }

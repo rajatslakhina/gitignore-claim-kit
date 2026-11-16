@@ -58,18 +58,22 @@ struct ReportTests {
     @Test("The ledger marks a claim repeated after a correction")
     func ledger() async {
         let ledger = IgnoreLedger()
-        let first = await ledger.review("`*.log` doesn't match `x/a.log`.")
-        #expect(first.repeatedCount == 0)
+        let first = await ledger.review("`*.log` doesn't match `x/a.log`.", context: gitignoreQuestion)
+        #expect(first.repeatedCount == 0 && first.verdict == .wrong)
         let second = await ledger.review("Again, `*.log` doesn't match `x/a.log`.")
         #expect(second.repeatedCount == 1)
         #expect(second.note?.contains("stated again") == true)
         #expect(second.summary.hasSuffix("1 repeated"))
+        #expect(await ledger.isAboutIgnoreRules)
         await ledger.forget()
+        #expect(await !ledger.isAboutIgnoreRules)
         let third = await ledger.review("`*.log` doesn't match `x/a.log`.")
-        #expect(third.repeatedCount == 0)
+        #expect(third.verdict == .noClaims)
+        let fourth = await ledger.review("In a .gitignore, `*.log` doesn't match `x/a.log`.")
+        #expect(fourth.repeatedCount == 0 && fourth.verdict == .wrong)
         let stats = await ledger.statistics
-        #expect(stats.reviews == 3 && stats.claims == 3 && stats.flagged == 3 && stats.repeated == 1)
+        #expect(stats.reviews == 4 && stats.claims == 3 && stats.flagged == 3 && stats.repeated == 1)
         #expect(ledger.checker.policy == .standard)
-        #expect(IgnoreClaimChecker().claims(in: "`*.log` matches `a.log`.").count == 1)
+        #expect(IgnoreClaimChecker().claims(in: "`*.log` matches `a.log`.", context: gitignoreQuestion).count == 1)
     }
 }

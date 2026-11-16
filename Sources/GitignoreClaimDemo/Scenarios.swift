@@ -50,7 +50,7 @@ enum Scenarios {
     static func anchoring() {
         scenario(3, "Where a pattern matches")
         let answer = """
-        `*.log` only matches log files at the root of the repository. `doc/*.txt` matches \
+        In a `.gitignore`, `*.log` only matches log files at the root of the repository. `doc/*.txt` matches \
         `doc/server/arch.txt` as well. `config/secrets.json` matches at any depth. \
         `/build` only ignores the top-level `build` folder.
         """
@@ -119,10 +119,11 @@ enum Scenarios {
     }
 
     static func conversation() async {
-        scenario(8, "A conversation: the same mistake after a correction")
+        scenario(8, "A conversation about .gitignore: the same mistake after a correction")
         let ledger = IgnoreLedger()
+        let question = "Which files will my .gitignore leave out?"
         let first = "`doc/*.txt` matches `doc/server/arch.txt` too, and `*.log` only matches at the root."
-        let firstReport = await ledger.review(first)
+        let firstReport = await ledger.review(first, context: question)
         show("turn 1", firstReport)
         if let feedback = firstReport.feedback {
             print("   feedback sent: \(feedback.split(separator: "\n").count) lines")
@@ -132,5 +133,7 @@ enum Scenarios {
         let stats = await ledger.statistics
         print("   ledger: \(stats.reviews) reviews, \(stats.claims) claims, \(stats.flagged) flagged, "
               + "\(stats.repeated) repeated")
+        let regex = "`[a-z]+` matches `abc`, and `compactMap` ignores `nil` values."
+        show("unrelated answer, new conversation", IgnoreClaimChecker().check(regex))
     }
 }

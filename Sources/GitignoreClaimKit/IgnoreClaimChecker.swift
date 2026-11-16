@@ -9,8 +9,8 @@ public struct IgnoreClaimChecker: Sendable {
         reader = IgnoreClaimReader(checksLines: policy.checksLines)
     }
 
-    public func claims(in text: String) -> [IgnoreClaim] {
-        reader.claims(in: text)
+    public func claims(in text: String, context: String = "") -> [IgnoreClaim] {
+        reader.claims(in: text, context: context)
     }
 
     public func judge(_ claim: IgnoreClaim) -> IgnoreFinding {
@@ -18,9 +18,15 @@ public struct IgnoreClaimChecker: Sendable {
     }
 
     /// Every claim's finding. A .gitignore line that works as written makes no finding of its own, so that an
-    /// answer with a long .gitignore is not reported as a long list of claims that hold.
-    public func check(_ text: String) -> IgnoreReport {
-        IgnoreReport(findings: claims(in: text).map(judge).filter { $0.claim.isExplicit || $0.severity != .holds })
+    /// answer with a long .gitignore is not reported as a long list of claims that hold. `context` is other text
+    /// from the conversation (the question, say): when it, or the answer, mentions an ignore file, a sentence's
+    /// own patterns are read as ignore rules; otherwise "`[a-z]+` matches `abc`" is left alone.
+    public func check(_ text: String, context: String = "") -> IgnoreReport {
+        report(claims(in: text, context: context))
+    }
+
+    func report(_ claims: [IgnoreClaim]) -> IgnoreReport {
+        IgnoreReport(findings: claims.map(judge).filter { $0.claim.isExplicit || $0.severity != .holds })
     }
 }
 
@@ -37,13 +43,20 @@ public actor IgnoreLedger {
     public nonisolated let checker: IgnoreClaimChecker
     public private(set) var statistics = Statistics()
     private var flaggedKeys: Set<String> = []
+    /// Set once any answer or context in the conversation mentioned an ignore file.
+    public private(set) var isAboutIgnoreRules = false
 
     public init(checker: IgnoreClaimChecker = IgnoreClaimChecker()) {
         self.checker = checker
     }
 
-    public func review(_ text: String) -> IgnoreReport {
-        var findings = checker.check(text).findings
+    /// Checks one answer. `context` is the question it answers; once an answer or a question mentions an ignore
+    /// file, later answers are read as being about ignore rules too.
+    public func review(_ text: String, context: String = "") -> IgnoreReport {
+        isAboutIgnoreRules = isAboutIgnoreRules || IgnoreClaimReader.isAboutIgnoreRules(context)
+            || IgnoreClaimReader.isAboutIgnoreRules(text)
+        let claims = checker.reader.claims(in: text, context: context, assumingIgnoreContext: isAboutIgnoreRules)
+        var findings = checker.report(claims).findings
         var keys: Set<String> = []
         for index in findings.indices where findings[index].severity >= .caution {
             let key = findings[index].key
@@ -59,8 +72,10 @@ public actor IgnoreLedger {
         return report
     }
 
-    /// Starts a new conversation: nothing flagged so far counts as a repeat.
+    /// Starts a new conversation: nothing flagged so far counts as a repeat, and nothing is assumed about ignore
+    /// files.
     public func forget() {
         flaggedKeys.removeAll()
+        isAboutIgnoreRules = false
     }
 }
