@@ -1,17 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1180" height="288" viewBox="0 0 1180 288">
 <rect width="1180" height="288" rx="12" fill="#0b1120"/>
 <circle cx="24" cy="22" r="6" fill="#ef4444"/><circle cx="44" cy="22" r="6" fill="#f59e0b"/><circle cx="64" cy="22" r="6" fill="#22c55e"/>
-<text x="590.0" y="27" fill="#94a3b8" font-family="Helvetica, Arial, sans-serif" font-size="13" text-anchor="middle">build,&#160;tests,&#160;coverage,&#160;lint&#160;and&#160;git&#160;parity,&#160;1.0.1&#160;(real&#160;numbers&#160;from&#160;this&#160;run)</text>
+<text x="590.0" y="27" fill="#94a3b8" font-family="Helvetica, Arial, sans-serif" font-size="13" text-anchor="middle">build,&#160;tests,&#160;coverage,&#160;lint&#160;and&#160;git&#160;parity,&#160;1.0.2&#160;(real&#160;numbers&#160;from&#160;this&#160;run)</text>
 <text x="20" y="58" fill="#e2e8f0" font-family="Menlo, Monaco, monospace" font-size="12" text-anchor="start">$&#160;swift&#160;build</text>
 <text x="20" y="76" fill="#86efac" font-family="Menlo, Monaco, monospace" font-size="12" text-anchor="start">Build&#160;complete!&#160;(0&#160;warnings,&#160;0&#160;errors)&#160;&#160;&#160;&#160;Swift&#160;6.4.2,&#160;language&#160;mode&#160;6</text>
-<text x="20" y="94" fill="#e2e8f0" font-family="Menlo, Monaco, monospace" font-size="12" text-anchor="start">$&#160;swift&#160;test&#160;--enable-code-coverage</text>
-<text x="20" y="112" fill="#86efac" font-family="Menlo, Monaco, monospace" font-size="12" text-anchor="start">Test&#160;run&#160;with&#160;50&#160;tests&#160;in&#160;9&#160;suites&#160;passed</text>
+<text x="20" y="94" fill="#e2e8f0" font-family="Menlo, Monaco, monospace" font-size="12" text-anchor="start">$&#160;swift&#160;test&#160;--enable-code-coverage&#160;--no-parallel</text>
+<text x="20" y="112" fill="#86efac" font-family="Menlo, Monaco, monospace" font-size="12" text-anchor="start">Test&#160;run&#160;with&#160;51&#160;tests&#160;in&#160;9&#160;suites&#160;passed</text>
 <text x="20" y="130" fill="#e2e8f0" font-family="Menlo, Monaco, monospace" font-size="12" text-anchor="start">$&#160;xcrun&#160;llvm-cov&#160;report&#160;...&#160;(library&#160;target,&#160;22&#160;files)</text>
-<text x="20" y="148" fill="#86efac" font-family="Menlo, Monaco, monospace" font-size="12" text-anchor="start">TOTAL&#160;&#160;&#160;regions&#160;98.82%&#160;(1086/1099)&#160;&#160;&#160;functions&#160;100.00%&#160;(424)&#160;&#160;&#160;lines&#160;100.00%&#160;(1518)</text>
+<text x="20" y="148" fill="#86efac" font-family="Menlo, Monaco, monospace" font-size="12" text-anchor="start">TOTAL&#160;&#160;&#160;regions&#160;98.55%&#160;(1090/1106)&#160;&#160;&#160;functions&#160;100.00%&#160;(427)&#160;&#160;&#160;lines&#160;100.00%&#160;(1525)</text>
 <text x="20" y="166" fill="#e2e8f0" font-family="Menlo, Monaco, monospace" font-size="12" text-anchor="start">$&#160;swiftlint&#160;lint&#160;--strict</text>
 <text x="20" y="184" fill="#86efac" font-family="Menlo, Monaco, monospace" font-size="12" text-anchor="start">Done&#160;linting!&#160;Found&#160;0&#160;violations,&#160;0&#160;serious&#160;in&#160;26&#160;files.</text>
 <text x="20" y="202" fill="#e2e8f0" font-family="Menlo, Monaco, monospace" font-size="12" text-anchor="start">$&#160;python3&#160;-I&#160;Scripts/parity.py&#160;&gt;&#160;Tests/GitignoreClaimKitTests/ParityFixture.swift</text>
 <text x="20" y="220" fill="#86efac" font-family="Menlo, Monaco, monospace" font-size="12" text-anchor="start">git&#160;2.49.0:&#160;67&#160;repositories,&#160;209&#160;paths,&#160;check-ignore&#160;and&#160;status&#160;agree;&#160;every&#160;row&#160;reproduced</text>
 <text x="20" y="238" fill="#e2e8f0" font-family="Menlo, Monaco, monospace" font-size="12" text-anchor="start">mutation&#160;checks&#160;(suite&#160;exit&#160;status):&#160;parent-exclusion&#160;rule&#160;removed&#160;-&gt;&#160;1,&#160;**/&#160;zero&#160;dirs&#160;removed&#160;-&gt;&#160;1</text>
-<text x="20" y="256" fill="#e2e8f0" font-family="Menlo, Monaco, monospace" font-size="12" text-anchor="start">probe&#160;answers:&#160;39&#160;correct&#160;(all&#160;quiet),&#160;8&#160;wrong&#160;(all&#160;caught),&#160;15&#160;from&#160;other&#160;domains&#160;(no&#160;claim)</text>
+<text x="20" y="256" fill="#e2e8f0" font-family="Menlo, Monaco, monospace" font-size="12" text-anchor="start">probe&#160;answers:&#160;39&#160;correct&#160;(all&#160;quiet),&#160;8&#160;wrong&#160;(all&#160;caught),&#160;17&#160;from&#160;other&#160;domains&#160;or&#160;later&#160;turns&#160;(no&#160;claim)</text>
 </svg>

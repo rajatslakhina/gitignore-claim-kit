@@ -43,19 +43,21 @@ public actor IgnoreLedger {
     public nonisolated let checker: IgnoreClaimChecker
     public private(set) var statistics = Statistics()
     private var flaggedKeys: Set<String> = []
-    /// Set once any answer or context in the conversation mentioned an ignore file.
+    /// Whether the last answer reviewed, or its context, mentioned an ignore file.
     public private(set) var isAboutIgnoreRules = false
 
     public init(checker: IgnoreClaimChecker = IgnoreClaimChecker()) {
         self.checker = checker
     }
 
-    /// Checks one answer. `context` is the question it answers; once an answer or a question mentions an ignore
-    /// file, later answers are read as being about ignore rules too.
+    /// Checks one answer. `context` is the question it answers. A turn where neither mentions an ignore file
+    /// makes no new claims from its sentences' own patterns ("`[a-z]+` matches `abc`" in a later question about
+    /// regexes is about regexes); it keeps only those that repeat a claim flagged earlier in the conversation,
+    /// so "you're right, `doc/*.txt` does match `doc/a/b.txt`" after a correction is still caught.
     public func review(_ text: String, context: String = "") -> IgnoreReport {
-        isAboutIgnoreRules = isAboutIgnoreRules || IgnoreClaimReader.isAboutIgnoreRules(context)
-            || IgnoreClaimReader.isAboutIgnoreRules(text)
-        let claims = checker.reader.claims(in: text, context: context, assumingIgnoreContext: isAboutIgnoreRules)
+        isAboutIgnoreRules = IgnoreClaimReader.isAboutIgnoreRules(context) || IgnoreClaimReader.isAboutIgnoreRules(text)
+        let all = checker.reader.claims(in: text, context: context, assumingIgnoreContext: true)
+        let claims = isAboutIgnoreRules ? all : all.filter { !$0.restsOnSentence || flaggedKeys.contains($0.key) }
         var findings = checker.report(claims).findings
         var keys: Set<String> = []
         for index in findings.indices where findings[index].severity >= .caution {

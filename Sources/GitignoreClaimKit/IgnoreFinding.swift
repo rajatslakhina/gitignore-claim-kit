@@ -84,6 +84,6 @@ public struct IgnoreFinding: Sendable, Hashable {
 
     /// Identifies the same claim across rewrites.
     var key: String {
-        "\(claim.kind)|\(claim.subject)|\(claim.assertion)".lowercased()
+        claim.key
     }
 }

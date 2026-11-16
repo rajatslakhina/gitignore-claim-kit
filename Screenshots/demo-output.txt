@@ -56,8 +56,7 @@ GitignoreClaimKit demo: what answers say about .gitignore, checked with git's ow
    WRONG path: `doc/server/arch.txt` is not ignored: no line matches it, so the claim that it is ignored is wrong. `*` does not match `/`; `**` does. `doc/**/*.txt` does what the answer expects.
    WRONG scope: `*.log` matches at every level, not only the top (`sub/x.log` is matched). A pattern with no slash (other than a trailing one) matches at every level. `/*.log` does what the answer expects.
    feedback sent: 4 lines
--- turn 2: wrong (2 claims checked, 1 hold, 1 wrong, 1 repeated)
-   ok    scope: Right: `*.log` matches at any depth (`sub/x.log`).
+-- turn 2: wrong (1 claim checked, 0 hold, 1 wrong, 1 repeated)
    WRONG path: `doc/server/arch.txt` is not ignored: no line matches it, so the claim that it is ignored is wrong. `*` does not match `/`; `**` does. `doc/**/*.txt` does what the answer expects. [repeated]
-   ledger: 2 reviews, 4 claims, 3 flagged, 1 repeated
+   ledger: 2 reviews, 3 claims, 3 flagged, 1 repeated
 -- unrelated answer, new conversation: noClaims (no claims about ignore rules)

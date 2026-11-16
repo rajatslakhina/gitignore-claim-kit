@@ -11,9 +11,8 @@ public struct IgnoreClaimReader: Sendable {
     /// Words that show a text is about ignore files. Without one of them (in the answer, or in the context a
     /// caller passes) a sentence such as "`[a-z]+` matches `abc`" is about something else, so the claims that
     /// rest only on the sentence's own patterns are not read.
-    static let contextMarkers = ["gitignore", "git ignore", "ignore file", "ignore-file", "ignore rule",
-                                 "ignore pattern", "check-ignore", "info/exclude", "excludesfile", "ignored by git",
-                                 "git ignores"] + RuleBlocks.foreignFiles.map { String($0.dropFirst()) }
+    static let contextMarkers = ["gitignore", "git ignore", "check-ignore", "info/exclude", "excludesfile",
+                                 "ignored by git"] + RuleBlocks.foreignFiles.map { String($0.dropFirst()) }
 
     /// Whether the text talks about .gitignore (or another tool's ignore file).
     public static func isAboutIgnoreRules(_ text: String) -> Bool {

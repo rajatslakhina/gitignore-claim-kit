@@ -46,6 +46,16 @@ public struct IgnoreClaim: Sendable, Hashable {
     /// Whether the subject path is a directory; `nil` when the answer does not say.
     let isDirectory: Bool?
 
+    /// Identifies the same claim across rewrites.
+    var key: String {
+        "\(kind)|\(subject)|\(assertion)".lowercased()
+    }
+
+    /// Whether it rests only on the patterns its sentence names.
+    var restsOnSentence: Bool {
+        if case .sentence = source { true } else { false }
+    }
+
     /// The same claim, about another tool's ignore file.
     func foreign(_ name: String) -> IgnoreClaim {
         IgnoreClaim(kind: kind, subject: subject, assertion: assertion, sentence: sentence, isExplicit: isExplicit,

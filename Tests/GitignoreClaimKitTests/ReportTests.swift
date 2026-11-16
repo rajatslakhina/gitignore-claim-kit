@@ -64,6 +64,10 @@ struct ReportTests {
         #expect(second.repeatedCount == 1)
         #expect(second.note?.contains("stated again") == true)
         #expect(second.summary.hasSuffix("1 repeated"))
+        #expect(await !ledger.isAboutIgnoreRules)
+        let unrelated = await ledger.review("`[a-z]+` matches `abc`.", context: "What does this regex match?")
+        #expect(unrelated.verdict == .noClaims)
+        _ = await ledger.review("Fine.", context: "Back to my .gitignore.")
         #expect(await ledger.isAboutIgnoreRules)
         await ledger.forget()
         #expect(await !ledger.isAboutIgnoreRules)
@@ -72,7 +76,7 @@ struct ReportTests {
         let fourth = await ledger.review("In a .gitignore, `*.log` doesn't match `x/a.log`.")
         #expect(fourth.repeatedCount == 0 && fourth.verdict == .wrong)
         let stats = await ledger.statistics
-        #expect(stats.reviews == 4 && stats.claims == 3 && stats.flagged == 3 && stats.repeated == 1)
+        #expect(stats.reviews == 6 && stats.claims == 3 && stats.flagged == 3 && stats.repeated == 1)
         #expect(ledger.checker.policy == .standard)
         #expect(IgnoreClaimChecker().claims(in: "`*.log` matches `a.log`.", context: gitignoreQuestion).count == 1)
     }

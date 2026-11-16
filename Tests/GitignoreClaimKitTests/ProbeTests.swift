@@ -91,6 +91,19 @@ struct ProbeTests {
         #expect(check(answer).verdict == .wrong)
     }
 
+    @Test("A conversation that was about .gitignore does not make a later regex answer a gitignore claim")
+    func contextDoesNotStick() async {
+        let ledger = IgnoreLedger()
+        let first = await ledger.review("`doc/*.txt` matches `doc/server/arch.txt`.", context: gitignoreQuestion)
+        #expect(first.verdict == .wrong)
+        let regex = await ledger.review("`[a-z]+` matches `abc`.", context: "What does this regex match?")
+        #expect(regex.verdict == .noClaims)
+        let again = await ledger.review("Yes, `doc/*.txt` matches `doc/server/arch.txt`.", context: "Sure?")
+        #expect(again.verdict == .wrong && again.repeatedCount == 1)
+        let fresh = await ledger.review("And `*.md` matches `a/b.md`.", context: "Thanks.")
+        #expect(fresh.verdict == .noClaims)
+    }
+
     @Test("An answer that names .gitignore needs no context; one that does not, does")
     func context() {
         #expect(IgnoreClaimChecker().check("In a `.gitignore`, `*.log` doesn't match `x/a.log`.").verdict == .wrong)
@@ -98,6 +111,9 @@ struct ProbeTests {
         #expect(IgnoreClaimChecker().check("`*.log` doesn't match `x/a.log`.", context: "my .dockerignore").verdict
             == .unchecked)
         #expect(IgnoreClaimReader.isAboutIgnoreRules("Run git check-ignore -v"))
+        #expect(IgnoreClaimChecker().check("The linter will ignore files in `dist`. `[a-z]+` matches `abc`.").verdict
+            == .noClaims)
+        #expect(!IgnoreClaimReader.isAboutIgnoreRules("Prettier can ignore files and ignore patterns."))
         let block = "```ignore\n*.log\n```\nThis ignores `a.log`."
         #expect(IgnoreClaimChecker().check(block, context: "my .dockerignore").findings.first?.claim.source == .block(1))
     }
