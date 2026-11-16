@@ -1,0 +1,62 @@
+GitignoreClaimKit demo: what answers say about .gitignore, checked with git's own matching rules
+
+== 1. Keeping one file in an ignored folder
+-- answer: wrong (1 claim checked, 0 hold, 1 wrong)
+   WRONG path: `logs/keep.log` is ignored: `logs/` excludes its directory `logs/`, so the claim that it is kept is wrong. git cannot re-include a file inside an excluded directory, so the `!` line has no effect. Write `logs/*` instead, so the directory stays open and the `!` line can work.
+   ignored  logs/keep.log <- `logs/` (line 1) via excluded logs/
+-- rewrite: verified (2 claims checked, 2 hold)
+   ok    path: Right: `logs/keep.log` is not ignored: `!logs/keep.log` re-includes it.
+   ok    path: Right: `logs/app.log` is ignored by `logs/*`.
+   kept     logs/keep.log <- `!logs/keep.log` (line 2)
+
+== 2. A comment after a pattern
+-- answer: wrong (2 claims checked, 0 hold, 2 wrong)
+   WRONG line: `.build/        # build products` does not ignore `.build/`. git reads `#` as a comment only at the start of a line, so the comment is part of the pattern. Put `.build/` on its own line and the comment on the line above.
+   WRONG path: `.build/debug/App.o` is not ignored: no line matches it, so the claim that it is ignored is wrong. git reads `#` as a comment only at the start of a line, so the comment is part of the pattern. Put `.build/` on its own line and the comment on the line above.
+   kept     .build/debug/App.o
+
+== 3. Where a pattern matches
+-- answer: wrong (5 claims checked, 2 hold, 3 wrong)
+   WRONG scope: `*.log` matches at every level, not only the top (`sub/x.log` is matched). A pattern with no slash (other than a trailing one) matches at every level. `/*.log` does what the answer expects.
+   WRONG path: `doc/server/arch.txt` is not ignored: no line matches it, so the claim that it is ignored is wrong. `*` does not match `/`; `**` does. `doc/**/*.txt` does what the answer expects.
+   WRONG scope: `config/secrets.json` does not match at any depth (`sub/config/secrets.json` is not matched). A slash at the start or in the middle anchors a pattern to the directory of its .gitignore. `**/config/secrets.json` does what the answer expects.
+   ok    scope: Right: `/build` matches only at the top level (`sub/build`).
+   ok    path: Right: `build` is ignored by `/build`.
+   ignored  logs/debug/app.log <- `*.log` (line 1)
+   kept     doc/server/arch.txt
+   ignored  doc/readme.txt <- `doc/*.txt` (line 2)
+
+== 4. A trailing slash, and ** between slashes
+-- answer: wrong (3 claims checked, 0 hold, 3 wrong)
+   WRONG path: `build` is not ignored: no line matches it, so the claim that it is ignored is wrong. A pattern ending in `/` matches only directories. `build` does what the answer expects.
+   WRONG path: `a/b` is ignored by `a/**/b`, so the claim that it is kept is wrong. `/**/` matches zero or more directories.
+   WRONG path: `.env` is ignored by `*.env`, so the claim that it is kept is wrong. In .gitignore `*` also matches a leading dot.
+
+== 5. Ignoring a file that is already committed
+-- answer: wrong (1 claim checked, 0 hold, 1 wrong)
+   WRONG tracking: Adding a path to .gitignore does not untrack a file git already tracks. Ignore rules apply only to untracked files: a committed file stays tracked until `git rm --cached <path>`, which keeps it on disk and in earlier commits.
+-- rewrite: noClaims (no claims about ignore rules)
+
+== 6. Upper and lower case
+-- standard (core.ignorecase unknown): caution (1 claim checked, 0 hold, 1 to check)
+   check path: That `app.log` is ignored holds only where `core.ignorecase` is true (the default for a repository created on macOS or Windows); the other setting gives the opposite result.
+-- caseSensitive (Linux, CI): wrong (1 claim checked, 0 hold, 1 wrong)
+   WRONG path: `app.log` is not ignored: no line matches it, so the claim that it is ignored is wrong. Matching ignores case only where `core.ignorecase` is true; this repository is set the other way.
+-- caseInsensitive (macOS, Windows): verified (1 claim checked, 1 hold)
+   ok    path: Right: `app.log` is ignored by `*.LOG`.
+
+== 7. A .gitignore inside a folder, and another tool's ignore file
+-- answer: verified (1 claim checked, 1 hold)
+   ok    path: Right: `logs/today.txt` is ignored by `*`.
+-- dockerignore: unchecked (1 claim checked, 0 hold, 1 unchecked)
+   skip  path: Not checked: .dockerignore follows its own tool's rules, not git's.
+
+== 8. A conversation: the same mistake after a correction
+-- turn 1: wrong (2 claims checked, 0 hold, 2 wrong)
+   WRONG path: `doc/server/arch.txt` is not ignored: no line matches it, so the claim that it is ignored is wrong. `*` does not match `/`; `**` does. `doc/**/*.txt` does what the answer expects.
+   WRONG scope: `*.log` matches at every level, not only the top (`sub/x.log` is matched). A pattern with no slash (other than a trailing one) matches at every level. `/*.log` does what the answer expects.
+   feedback sent: 4 lines
+-- turn 2: wrong (2 claims checked, 1 hold, 1 wrong, 1 repeated)
+   ok    scope: Right: `*.log` matches at any depth (`sub/x.log`).
+   WRONG path: `doc/server/arch.txt` is not ignored: no line matches it, so the claim that it is ignored is wrong. `*` does not match `/`; `**` does. `doc/**/*.txt` does what the answer expects. [repeated]
+   ledger: 2 reviews, 4 claims, 3 flagged, 1 repeated
